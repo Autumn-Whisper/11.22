@@ -1,0 +1,25 @@
+{
+    "map_size": 20,
+    "squares": {
+        "1": {"square_type": "Go", "name": "Go"},
+        "2": {"square_type": "Property", "name": "Central", "price": 800, "rent": 90, "owner": null},
+        "3": {"square_type": "Property", "name": "Wan Chai", "price": 700, "rent": 65, "owner": null},
+        "4": {"square_type": "Income Tax", "name": "Income Tax"},
+        "5": {"square_type": "Property", "name": "Stanley", "price": 600, "rent": 60, "owner": null},
+        "6": {"square_type": "In Jail/Just Visiting", "name": "In Jail/Just Visiting"},
+        "7": {"square_type": "Property", "name": "Shek O", "price": 400, "rent": 10, "owner": null},
+        "8": {"square_type": "Property", "name": "Mong Kok", "price": 500, "rent": 40, "owner": null},
+        "9": {"square_type": "Chance", "name": "Chance"},
+        "10": {"square_type": "Property", "name": "Tsing Yi", "price": 400, "rent": 15, "owner": null},
+        "11": {"square_type": "Free Parking", "name": "Free Parking"},
+        "12": {"square_type": "Property", "name": "Shatin", "price": 700, "rent": 75, "owner": null},
+        "13": {"square_type": "Chance", "name": "Chance"},
+        "14": {"square_type": "Property", "name": "Tuen Mun", "price": 400, "rent": 20, "owner": null},
+        "15": {"square_type": "Property", "name": "Tai Po", "price": 500, "rent": 25, "owner": null},
+        "16": {"square_type": "Go to Jail", "name": "Go to Jail"},
+        "17": {"square_type": "Property", "name": "Sai Kung", "price": 400, "rent": 10, "owner": null},
+        "18": {"square_type": "Property", "name": "Yuen Long", "price": 400, "rent": 25, "owner": null},
+        "19": {"square_type": "Chance", "name": "Chance"},
+        "20": {"square_type": "Property", "name": "Tai O", "price": 600, "rent": 25, "owner": null}
+    }
+}
