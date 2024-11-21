@@ -1,29 +1,29 @@
 controller class:
     function contained:
-             [check]    def toggle_debug_mode(self)
-             [check]    def start_game(self)
-                        def game_loop(self)  // unnecessary check
-             [check]    def player_turn(self, player_id)
-             [check]    def handle_dice_throw(self, player_id)
-             [check]    def handle_square(self, player_id, position)
-             [check]    def check_bankruptcy()
-             [check]    def handle_jail(self, player_id)
-             [check]    def end_game(self)
-                        def handle_debug_action
-total tests:     22
-tests passed:    22
+             [PASS]    def toggle_debug_mode(self)
+             [PASS]    def start_game(self)
+             [PASS]    def game_loop(self)  // unnecessary check
+             [PASS]    def player_turn(self, player_id)
+             [PASS]    def handle_dice_throw(self, player_id)
+             [PASS]    def handle_square(self, player_id, position)
+             [PASS]    def check_bankruptcy()
+             [PASS]    def handle_jail(self, player_id)
+             [PASS]    def end_game(self)
+             [PASS]    def handle_debug_action
+total tests:     29
+tests passed:    29
 
-coverage: 88.89%
+coverage: 100%
 
 map_editor class:
     function contained:
-             [check]    def add_square(self, position, square)
-             [check]    def edit_square(self, position, square)
-             [check]    def get_square(self, position)
-             [check]    def validate_map(self)
-             [check]    def to_dict(self)
-             [check]    def from_dict(data)
-             [check]    def display_map_summary(map_data)
+             [PASS]    def add_square(self, position, square)
+             [PASS]    def edit_square(self, position, square)
+             [PASS]    def get_square(self, position)
+             [PASS]    def validate_map(self)
+             [PASS]    def to_dict(self)
+             [PASS]    def from_dict(data)
+             [PASS]    def display_map_summary(map_data)
 total tests:     15
 tests passed:    15
 
@@ -31,28 +31,28 @@ coverage: 100%
 
 model class:
     function contained:
-             [check]    def load_game(self, save_file)
-             [check]    def save_game(self)
-             [check]    def setup_new_game(self, map_file, player_names)
-             [check]    def update_player_position(self, player_id, new_position)
-             [check]    def update_player_cash(self, player_id, amount)
-             [check]    def update_player_in_jail(self, player_id, in_jail)
-             [check]    def update_player_jail_turns(self, player_id, turns)
-             [check]    def update_round_num(self, new_round_num)
-             [check]    def is_game_over(self)
-             [check]    def get_winners(self)
+             [PASS]    def load_game(self, save_file)
+             [PASS]    def save_game(self)
+             [PASS]    def setup_new_game(self, map_file, player_names)
+             [PASS]    def update_player_position(self, player_id, new_position)
+             [PASS]    def update_player_cash(self, player_id, amount)
+             [PASS]    def update_player_in_jail(self, player_id, in_jail)
+             [PASS]    def update_player_jail_turns(self, player_id, turns)
+             [PASS]    def update_round_num(self, new_round_num)
+             [PASS]    def is_game_over(self)
+             [PASS]    def get_winners(self)
 
-             [check]    prompt
-             [check]    display
-             [check]    display_options
-             [check]    display_map_summary
-             [check]    sidplay_errors
+             [PASS]    prompt
+             [PASS]    display
+             [PASS]    display_options
+             [PASS]    display_map_summary
+             [PASS]    sidplay_errors
 
-             [check]    create_new_map
-             [check]    define_square
-             [check]    edit_map
-             [check]    load_map
-             [check]    main_menu
+             [PASS]    create_new_map
+             [PASS]    define_square
+             [PASS]    edit_map
+             [PASS]    load_map
+             [PASS]    main_menu
 total tests:     14
 tests passed:    14
 coverage: 100%
@@ -77,4 +77,4 @@ view class:
 total tests:     14
 tests passed:    14
 coverage: 100%
-Total_unit_test_coverage:98%
+Total_unit_test_coverage:100%

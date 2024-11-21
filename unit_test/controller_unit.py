@@ -350,6 +350,7 @@ class TestGameController(unittest.TestCase):
         self.model.update_player_position.assert_not_called()  # Ensure no update is made
 
 
+
     def test_handle_jail_bankrupt_after_two_turns(self):
         self.model.players["1"]["jail_turns"] = 2
         self.model.players["1"]["cash"] = 100
@@ -359,7 +360,116 @@ class TestGameController(unittest.TestCase):
         self.assertTrue(self.model.players["1"]["bankrupt"])
         self.view.GameView.player_bankrupt.assert_called_once_with("Alan")
 
+    def test_debug_action_no_action_chosen(self):
+        self.view.GameView.debug_action_menu.return_value = None  # No action chosen
+
+        self.controller.handle_debug_actions(self.player_id)
+
+        # Ensure no updates are made
+        self.model.update_player_cash.assert_not_called()
+        self.model.update_player_position.assert_not_called()
+
+    def test_debug_action_bankruptcy(self):
+        self.view.GameView.debug_action_menu.return_value = 1  # Modify cash
+        self.view.GameView.debug_modify_cash.return_value = -500  # Negative cash
+
+        # Set up a property owned by the player
+        self.model.squares = {"1": {"name": "Test Property", "owner": "Alan"}}
+        self.model.players["1"]["properties"] = ["Test Property"]
+
+        # Mock `update_player_cash` to update the player's cash directly
+        def mock_update_player_cash(player_id, amount):
+            self.model.players[player_id]["cash"] = amount
+
+        self.model.update_player_cash.side_effect = mock_update_player_cash
+
+        # Call the method
+        self.controller.handle_debug_actions(self.player_id)
+
+        # Verify the player is marked as bankrupt
+        self.assertTrue(self.model.players["1"]["bankrupt"])
+
+        # Verify all properties are cleared
+        self.assertEqual(self.model.players["1"]["properties"], [])
+        self.assertEqual(self.model.squares["1"]["owner"], "")
+
+        # Verify the `player_bankrupt` view is called
+        self.view.GameView.player_bankrupt.assert_called_once_with("Alan")
+    def test_end_game_no_winners(self):
+        self.model.get_winners.return_value = []  # No winners
+
+        self.controller.end_game()
+
+        # Verify the game over view is called with an empty list
+        self.view.GameView.show_game_over.assert_called_once_with([])
+
+    @patch.object(GameController, 'player_turn')
+    @patch.object(GameController, 'end_game')
+    def test_game_loop(self, mock_end_game, mock_player_turn):
+            # Mock game state
+            self.model.is_game_over.side_effect = [False, False, False, False, True]
+            self.model.round_num = 1
+            self.model.players_num = 2
+            self.model.players = {"1": {"name": "Alan", "bankrupt": False}, "2": {"name": "Ben", "bankrupt": False}}
+
+            # Mock view and model calls
+            self.view.GameView.show_round_start = Mock()
+            self.view.GameView.show_round_end = Mock()
+
+            # Call game loop
+            self.controller.game_loop()
+
+            # Ensure player_turn is called for each player in every round
+            mock_player_turn.assert_any_call(1)
+            mock_player_turn.assert_any_call(2)
+
+            # Check round start and end views
+            self.view.GameView.show_round_start.assert_called_with(1)
+            self.view.GameView.show_round_end.assert_called_with(1)
+
+            # Ensure end_game is called
+            mock_end_game.assert_called_once()
+
+    @patch.object(GameController, 'end_game')
+    def test_game_loop_game_already_over(self, mock_end_game):
+        # Mock `is_game_over` to return True immediately
+        self.model.is_game_over.return_value = True
+
+        # Call game loop
+        self.controller.game_loop()
+
+        # Ensure end_game is called without any turns
+        mock_end_game.assert_called_once()
+        self.view.GameView.show_round_start.assert_not_called()
+        self.view.GameView.show_round_end.assert_not_called()
+
+    @patch.object(GameController, 'player_turn')
+    def test_game_loop_bankrupt_player_skipped(self, mock_player_turn):
+        # Mark player 1 as bankrupt
+        self.model.players["1"]["bankrupt"] = True
+        self.model.players["2"] = {"name": "Ben", "bankrupt": False}
+
+        # Mock the number of players
+        self.model.players_num = 2
+
+        # Mock `is_game_over` to end after one round
+        self.model.is_game_over.side_effect = [False, False, True]  # Ends after one round
+
+        # Call game loop
+        self.controller.game_loop()
+
+        # Ensure `player_turn` is not called for the bankrupt player
+        mock_player_turn.assert_called_once_with(2)
 
 
+    def test_handle_jail_out_of_turns_bankrupt(self):
+            self.model.players["1"]["jail_turns"] = 2
+            self.model.players["1"]["cash"] = 50  # Not enough to pay fine
+
+            self.controller.handle_jail(self.player_id)
+
+            # Ensure the player is declared bankrupt
+            self.assertTrue(self.model.players["1"]["bankrupt"])
+            self.view.GameView.player_bankrupt.assert_called_once_with("Alan")
 if __name__ == '__main__':
     unittest.main()
