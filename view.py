@@ -1,5 +1,6 @@
 import os
 import random
+import string
 class MainmenuView:
     @staticmethod
     def welcome():
@@ -102,7 +103,8 @@ class MainmenuView:
                     name = input().strip()
                     
                     if not name:
-                        name = f"Player{i+1}"
+                        random_str = ''.join(random.choices(string.ascii_lowercase, k=5))
+                        name = f"player_{random_str}"
                         names.append(name)
                         break
                     
@@ -135,6 +137,21 @@ class MainmenuView:
         print("Game Start! Player List:")
         for player in players.values():
             print(f"{player['name']}: Initial cash ${player['cash']}")
+
+    @staticmethod
+    def choose_debug_mode():
+        while True:
+            try:
+                print("Enable debug mode? (y/n)")
+                choice = input().strip().lower()
+                if choice == 'y':
+                    return True
+                elif choice == 'n':
+                    return False
+                else:
+                    print("Invalid input, please enter 'y' or 'n'.")
+            except Exception as e:
+                print(f"An error occurred: {e}")
 
 class GameView:
     @staticmethod
@@ -176,20 +193,24 @@ class GameView:
             print(f"In jail for {jail_turns} turns!")
 
     @staticmethod
-    def player_action_menu():
+    def player_action_menu(debug_mode=False):
         print("What would you like to do?")
         print("1. Roll dice")
         print("2. View map")
         print("3. View player status")
         print("4. View all players' status")
         print("5. View next player")
+        if debug_mode:
+            print("6. Debug options")
         while True:
             try:
                 choice = int(input("Please enter the option number: "))
-                if choice in [1, 2, 3, 4, 5]:
+                if debug_mode and choice in [1, 2, 3, 4, 5, 6]:
+                    return choice
+                elif not debug_mode and choice in [1, 2, 3, 4, 5]:
                     return choice
                 else:
-                    print("Please enter a valid option number (1-5).")
+                    print("Please enter a valid option number.")
             except ValueError:
                 print("Invalid input, please enter a number.")
             except Exception as e:
@@ -366,3 +387,49 @@ class GameView:
                     print("Please enter a valid player number.")
             except Exception as e:
                 print(f"An error occurred: {e}")
+
+    @staticmethod
+    def debug_action_menu():
+        print("\nDebug Options:")
+        print("1. Modify cash")
+        print("2. Move to specific position")
+        while True:
+            try:
+                choice = int(input("Choose debug action: "))
+                if choice in [1, 2]:
+                    return choice
+                print("Please enter a valid option number.")
+            except ValueError:
+                print("Invalid input, please enter a number.")
+
+    @staticmethod
+    def debug_modify_cash():
+        while True:
+            try:
+                amount = int(input("Enter amount to add or subtract: "))
+                return amount
+            except ValueError:
+                print("Invalid input, please enter a number.")
+
+    @staticmethod
+    def debug_choose_position(map_size):
+        while True:
+            try:
+                position = int(input(f"Enter target position (1-{map_size}): "))
+                if 1 <= position <= map_size:
+                    return position
+                print(f"Position must be between 1 and {map_size}.")
+            except ValueError:
+                print("Invalid input, please enter a number.")
+
+    @staticmethod
+    def show_debug_mode_status(enabled):
+        print(f"Debug mode {'enabled' if enabled else 'disabled'}")
+
+    @staticmethod
+    def show_debug_bankrupt_status(player_name, is_bankrupt):
+        print(f"{player_name} is {'bankrupt' if is_bankrupt else 'not bankrupt'}")
+
+    @staticmethod
+    def show_debug_jail_status(player_name, in_jail):
+        print(f"{player_name} is {'in jail' if in_jail else 'not in jail'}")
