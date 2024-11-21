@@ -180,7 +180,7 @@ class GameView:
         print("What would you like to do?")
         print("1. Roll dice")
         print("2. View map")
-        print("3. View your status")
+        print("3. View player status")
         print("4. View all players' status")
         print("5. View next player")
         while True:
@@ -351,3 +351,18 @@ class GameView:
             print(f"Draw! Winners: {', '.join(winners)}")
         else:
             print(f"Congratulations {winners[0]}!")
+
+    @staticmethod
+    def choose_player_to_view(players):
+        print("Choose a player to view:")
+        for i, player in players.items():
+            print(f"{i}. {player['name']}")
+        while True:
+            try:
+                choice = input("Enter player number: ").strip()
+                if choice in players:
+                    return choice
+                else:
+                    print("Please enter a valid player number.")
+            except Exception as e:
+                print(f"An error occurred: {e}")

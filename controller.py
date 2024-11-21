@@ -69,7 +69,8 @@ class GameController:
             elif action == 2:
                 self.view.GameView.show_map(self.model.squares)
             elif action == 3:
-                self.view.GameView.show_player_states(player)
+                chosen_player_id = self.view.GameView.choose_player_to_view(self.model.players)
+                self.view.GameView.show_player_states(self.model.players[chosen_player_id])
             elif action == 4:
                 self.view.GameView.show_all_players_states(self.model.players)
             elif action == 5:
