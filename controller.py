@@ -2,9 +2,18 @@ class GameController:
     def __init__(self, model, view):
         self.model = model
         self.view = view
+        self.debug_mode = False
+
+    def toggle_debug_mode(self):
+        self.debug_mode = not self.debug_mode
+        self.view.GameView.show_debug_mode_status(self.debug_mode)
 
     def start_game(self):
         self.view.MainmenuView.welcome()
+        
+        if self.view.MainmenuView.choose_debug_mode():
+            self.toggle_debug_mode()
+        
         use_save = self.view.MainmenuView.choose_if_use_save()
         
         if use_save:
@@ -62,7 +71,7 @@ class GameController:
             return
 
         while True:
-            action = self.view.GameView.player_action_menu()
+            action = self.view.GameView.player_action_menu(self.debug_mode)
             if action == 1:
                 self.handle_dice_throw(player_id)
                 break
@@ -77,6 +86,8 @@ class GameController:
                 next_player_id = (player_id % self.model.players_num) + 1
                 next_player = self.model.players[str(next_player_id)]
                 self.view.GameView.show_next_player(next_player['name'])
+            elif action == 6 and self.debug_mode:
+                self.handle_debug_actions(player_id)
             else:
                 print("无效的选项，请重新选择。")
 
@@ -97,6 +108,20 @@ class GameController:
         square = self.model.squares[str(position)]
         player = self.model.players[str(player_id)]
 
+
+        def check_bankruptcy():
+            if player['cash'] < 0:
+                self.view.GameView.player_bankrupt(player['name'])
+                player['bankrupt'] = True
+
+                for prop in player.get('properties', []):
+                    for sq in self.model.squares.values():
+                        if sq['name'] == prop:
+                            sq['owner'] = ''
+                player['properties'] = []
+                return True
+            return False
+
         if square['square_type'] == 'Property':
             owner = square.get('owner')
             if owner is None or owner == '':
@@ -116,30 +141,24 @@ class GameController:
             else:
                 if owner != player['name']:
                     rent = square['rent']
-                    if player['cash'] >= rent:
-                        player['cash'] -= rent
+                    player['cash'] -= rent
+                    if not check_bankruptcy():
                         for pid, p in self.model.players.items():
                             if p['name'] == owner:
                                 p['cash'] += rent
                                 break
                         self.view.GameView.pay_rent(player['name'], owner, rent)
-                    else:
-                        self.view.GameView.player_bankrupt(player['name'])
-                        player['bankrupt'] = True
-                        for prop in player.get('properties', []):
-                            for sq in self.model.squares.values():
-                                if sq['name'] == prop:
-                                    sq['owner'] = ''
-                        player['properties'] = []
                 else:
                     self.view.GameView.reach_own_property(square['name'])
         elif square['square_type'] == 'Chance':
             amount = self.view.GameView.reach_a_chance()
             player['cash'] += amount
+            check_bankruptcy()
         elif square['square_type'] == 'Income Tax':
             tax = int(player['cash'] * 0.1 // 10 * 10)
             player['cash'] -= tax
             self.view.GameView.pay_income_tax(tax)
+            check_bankruptcy()
         elif square['square_type'] == 'Go to Jail':
             jail_position = None
             for pos_str, sq in self.model.squares.items():
@@ -194,4 +213,27 @@ class GameController:
 
     def end_game(self):
         winners = self.model.get_winners()
-        self.view.GameView.show_game_over(winners) 
+        self.view.GameView.show_game_over(winners)
+
+    def handle_debug_actions(self, player_id):
+        action = self.view.GameView.debug_action_menu()
+        player = self.model.players[str(player_id)]
+        
+        if action == 1:
+            amount = self.view.GameView.debug_modify_cash()
+            self.model.update_player_cash(str(player_id), amount)
+            if player['cash'] < 0:
+                self.view.GameView.player_bankrupt(player['name'])
+                player['bankrupt'] = True
+                for prop in player.get('properties', []):
+                    for sq in self.model.squares.values():
+                        if sq['name'] == prop:
+                            sq['owner'] = ''
+                player['properties'] = []
+            
+        elif action == 2:
+            position = self.view.GameView.debug_choose_position(self.model.map_size)
+            if position:
+                self.model.update_player_position(str(player_id), position)
+                self.handle_square(player_id, position)
+                
