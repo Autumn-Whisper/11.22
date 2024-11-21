@@ -30,7 +30,7 @@ class GameState:
         save_file = f"save/save_round_{self.round_num}.save"
         with open(save_file, 'w') as f:
             json.dump(data, f)
-        print(f"游戏已保存到 {save_file}")
+        print(f"Game saved to {save_file}")
 
     def setup_new_game(self, map_file, player_names):
         with open(map_file, 'r') as f:
