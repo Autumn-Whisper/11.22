@@ -27,6 +27,57 @@ class TestGameController(unittest.TestCase):
         #setup a map size
         self.model.map_size = 114514
 
+    def test_toggle_debug_mode(self):
+        # Ensure debug mode starts as False
+        self.assertFalse(self.controller.debug_mode)
+
+        # Toggle debug mode to True
+        self.controller.toggle_debug_mode()
+        self.assertTrue(self.controller.debug_mode)
+        self.view.GameView.show_debug_mode_status.assert_called_with(True)
+
+        # Toggle debug mode back to False
+        self.controller.toggle_debug_mode()
+        self.assertFalse(self.controller.debug_mode)
+        self.view.GameView.show_debug_mode_status.assert_called_with(False)
+
+    def test_debug_modify_cash(self):
+        self.view.GameView.debug_action_menu.return_value = 1
+        self.view.GameView.debug_modify_cash.return_value = 500
+
+        self.controller.handle_debug_actions(self.player_id)
+
+        self.model.update_player_cash.assert_called_once_with("1", 500)
+
+    def test_debug_change_position(self):
+        # Mock debug action to change position
+        self.view.GameView.debug_action_menu.return_value = 2
+        self.view.GameView.debug_choose_position.return_value = 10
+
+        # Configure self.model.squares as a dictionary
+        self.model.squares = {
+            "10": {
+                "square_type": "Property",
+                "name": "Park Place",
+                "price": 200,
+                "owner": None
+            }
+        }
+
+        # Simulate the behavior of the update_player_position method
+        def mock_update_player_position(player_id, new_position):
+            self.model.players[player_id]["position"] = new_position
+
+        self.model.update_player_position.side_effect = mock_update_player_position
+
+        # Call the method
+        self.controller.handle_debug_actions(self.player_id)
+
+        # Verify model method was called to update the player's position
+        self.model.update_player_position.assert_called_once_with("1", 10)
+
+        # Check if the player's position was actually updated
+        self.assertEqual(self.model.players["1"]["position"], 10)
 
     def test_start_game_new(self):
         #set up prerequisite
@@ -74,6 +125,8 @@ class TestGameController(unittest.TestCase):
         self.assertIn("Park Place", self.model.players["1"]["properties"])
         self.view.GameView.buy_success.assert_called_once_with("Park Place")
 
+
+
     def test_handle_square_property_owned_by_other(self):
 
         self.model.squares = {
@@ -94,6 +147,7 @@ class TestGameController(unittest.TestCase):
         self.assertEqual(self.model.players["2"]["cash"], 550)
 
         self.view.GameView.pay_rent.assert_called_once_with("Alan", "Ben", 50)
+
 
 
     def test_handle_square_chance(self):
@@ -194,6 +248,87 @@ class TestGameController(unittest.TestCase):
 
         self.view.GameView.invalid_choice.assert_called_once()
 
+    def test_end_game(self):
+        self.model.get_winners.return_value = ["Alan", "Ben"]
+
+        self.controller.end_game()
+
+        self.view.GameView.show_game_over.assert_called_once_with(["Alan", "Ben"])
+
+    def player_turn(self, player_id):
+        player = self.model.players[str(player_id)]
+        self.view.GameView.show_player_turn(
+            player['name'], player['cash'], player['position'],
+            player.get('properties', []), player['in_jail'], player['jail_turns']
+        )
+
+        # Check if the player is bankrupt at the start of their turn
+        if player["cash"] < 0:
+            self.view.GameView.player_bankrupt(player["name"])
+            player["bankrupt"] = True
+
+            # Clear player's properties and reset ownership
+            for prop in player.get("properties", []):
+                for square in self.model.squares.values():
+                    if square["name"] == prop:
+                        square["owner"] = ""
+            player["properties"] = []
+            return  # End the player's turn if bankrupt
+
+        if player['in_jail']:
+            self.handle_jail(player_id)
+            return
+
+        while True:
+            action = self.view.GameView.player_action_menu(self.debug_mode)
+            if action == 1:
+                self.handle_dice_throw(player_id)
+                break
+            elif action == 2:
+                self.view.GameView.show_map(self.model.squares)
+            elif action == 3:
+                chosen_player_id = self.view.GameView.choose_player_to_view(self.model.players)
+                self.view.GameView.show_player_states(self.model.players[chosen_player_id])
+            elif action == 4:
+                self.view.GameView.show_all_players_states(self.model.players)
+            elif action == 5:
+                next_player_id = (player_id % self.model.players_num) + 1
+                next_player = self.model.players[str(next_player_id)]
+                self.view.GameView.show_next_player(next_player['name'])
+            elif action == 6 and self.debug_mode:
+                self.handle_debug_actions(player_id)
+            else:
+                self.view.GameView.invalid_choice()
+
+    def test_player_turn_invalid_choice(self):
+        self.view.GameView.player_action_menu.return_value = 99
+
+        self.controller.player_turn(self.player_id)
+
+        self.view.GameView.invalid_choice.assert_called_once()
+
+    def test_handle_dice_throw_move_player(self):
+        self.view.GameView.throw_the_dice.return_value = (3, 4)  # Total steps = 7
+        self.model.map_size = 10
+
+        # Define squares as a dictionary
+        self.model.squares = {
+            "8": {
+                "square_type": "Property",
+                "name": "Test Property",
+                "price": 200,
+                "owner": None
+            }
+        }
+
+        # Call the method
+        self.controller.handle_dice_throw(self.player_id)
+
+        # Assert the position was updated correctly
+        self.model.update_player_position.assert_called_once_with("1", 8)
+
+
+
     @patch.object(GameController, 'handle_dice_throw')
     def test_handle_jail_after_two_turns(self, mock_handle_dice_throw):
         self.model.players["1"]["jail_turns"] = 2
@@ -205,6 +340,15 @@ class TestGameController(unittest.TestCase):
         # After paying 150
         self.assertEqual(self.model.players["1"]["cash"], 50)
         mock_handle_dice_throw.assert_called_once_with(self.player_id)
+
+    def test_debug_action_no_position_chosen(self):
+        self.view.GameView.debug_action_menu.return_value = 2  # Modify position
+        self.view.GameView.debug_choose_position.return_value = None  # No position selected
+
+        self.controller.handle_debug_actions(self.player_id)
+
+        self.model.update_player_position.assert_not_called()  # Ensure no update is made
+
 
     def test_handle_jail_bankrupt_after_two_turns(self):
         self.model.players["1"]["jail_turns"] = 2
