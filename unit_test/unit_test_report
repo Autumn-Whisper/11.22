@@ -13,6 +13,8 @@ controller class:
 total tests:     22
 tests passed:    22
 
+coverage: 88.89%
+
 map_editor class:
     function contained:
              [check]    def add_square(self, position, square)
@@ -24,6 +26,8 @@ map_editor class:
              [check]    def display_map_summary(map_data)
 total tests:     15
 tests passed:    15
+
+coverage: 100%
 
 model class:
     function contained:
@@ -51,6 +55,8 @@ model class:
              [check]    main_menu
 total tests:     14
 tests passed:    14
+coverage: 100%
+
 
 view class:
     function contained:
@@ -70,3 +76,5 @@ view class:
              [PASS]    test_choose_player_name_invalid_space
 total tests:     14
 tests passed:    14
+coverage: 100%
+Total_unit_test_coverage:98%
